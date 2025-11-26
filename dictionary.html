@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="Image/WebIcon-convertido-a-grande.jpeg">
+    <title>Diccionario Educativo | Cuidemos Nuestras Palabras</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles/styles.css">
+    <link rel="stylesheet" href="styles/dictionary.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <!--<div class="logo-icon">🛡️</div>-->
+                <span class="logo-text">Scanly</span>
+            </div>
+            <div class="nav-menu">
+                <a href="index.html" class="nav-link">Inicio</a>
+                <a href="index.html#analyzer" class="nav-link">Analizador</a>
+                <a href="dictionary.html" class="nav-link active">Diccionario</a>
+                <!--<a href="index.html#education" class="nav-link">Educación</a>
+                <div class="nav-buttons">
+                    <a href="login.html" class="btn-login">Iniciar Sesión</a>
+                    <a href="register.html" class="btn-register">Registrarse</a>
+                </div>-->
+            </div>
+            <div class="nav-toggle">
+                <i class="fas fa-bars"></i>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Dictionary Hero -->
+    <section class="dictionary-hero">
+        <div class="container">
+            <div class="hero-content">
+                <h1>Diccionario Educativo Contra el Ciberacoso</h1>
+                <p>Aprende a identificar, entender y evitar el lenguaje que puede herir a otros en el entorno digital</p>
+                <!--<div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="searchDictionary" placeholder="Buscar palabras o comportamientos...">
+                </div>-->
+            </div>
+        </div>
+    </section>
+
+    <!-- Dictionary Content -->
+    <section class="dictionary-content">
+        <div class="container">
+            <div class="dictionary-nav">
+                <button class="nav-btn active" data-category="all">
+                    <i class="fas fa-th"></i>
+                    Todos
+                </button>
+                <button class="nav-btn" data-category="insults">
+                    <i class="fas fa-ban"></i>
+                    Insultos
+                </button>
+                <button class="nav-btn" data-category="discrimination">
+                    <i class="fas fa-balance-scale"></i>
+                    Discriminación
+                </button>
+                <button class="nav-btn" data-category="threats">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Amenazas
+                </button>
+                <button class="nav-btn" data-category="exclusion">
+                    <i class="fas fa-user-slash"></i>
+                    Exclusión
+                </button>
+                <button class="nav-btn" data-category="sexual">
+                    <i class="fas fa-heart-broken"></i>
+                    Acoso Sexual
+                </button>
+            </div>
+
+            <div class="dictionary-grid" id="dictionaryGrid">
+                <!-- Los elementos se cargarán con JavaScript -->
+            </div>
+
+            <!-- Educational Resources -->
+            <div class="educational-section">
+                <h2>Recursos Educativos Adicionales</h2>
+                <div class="resources-grid">
+                    <div class="resource-card">
+                        <div class="resource-icon">
+                            <i class="fas fa-graduation-cap"></i>
+                        </div>
+                        <h3>Guía para Educadores</h3>
+                        <p>Material completo para profesores sobre cómo detectar y prevenir el ciberacoso en el aula.</p>
+                        <a href="https://www.mpba.gov.ar/files/content/GuiaActuacionDocenteCiberacoso.pdf" 
+                        target="_blank" 
+                        class="resource-link"
+                        onclick="trackDownload('guia_docentes')">
+                            Descargar PDF
+                        </a>
+                    </div>
+                    
+                    <div class="resource-card">
+                        <div class="resource-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <h3>Para Padres</h3>
+                        <p>Consejos prácticos para que los padres puedan proteger y educar a sus hijos en el entorno digital.</p>
+                        <a href="https://www.unicef.org/lac/crianza/seguridad-proteccion/es-ciberacoso-detenerlo-guia-padres-madres-herramientas" 
+                        target="_blank" 
+                        class="resource-link"
+                        onclick="trackClick('guia_padres')">
+                            Ver Guía
+                        </a>
+                    </div>
+                    
+                    <div class="resource-card">
+                        <div class="resource-icon">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <h3>Autodefensa Digital</h3>
+                        <p>Aprende a protegerte y a responder adecuadamente ante situaciones de acoso en línea.</p>
+                        <a href="https://kidshealth.org/es/teens/bullies.html" 
+                        target="_blank" 
+                        class="resource-link"
+                        onclick="trackClick('autodefensa_digital')">
+                            Aprender Más
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <div class="footer-logo">
+                        <!--<div class="logo-icon">🛡️</div>-->
+                        <span class="logo-text">Scanly</span>
+                    </div>
+                    <p>Plataforma educativa para detectar y prevenir el ciberacoso mediante inteligencia artificial.</p>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-facebook"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-linkedin"></i></a>
+                    </div>
+                </div>
+                
+                <div class="footer-section">
+                    <h4>Enlaces Rápidos</h4>
+                    <a href="index.html">Inicio</a>
+                    <a href="index.html#analyzer">Analizador</a>
+                    <a href="dictionary.html">Diccionario</a>
+                    <!--<a href="index.html#education">Educación</a>-->
+                </div>
+                
+                <div class="footer-section">
+                    <h4>Recursos</h4>
+                    <a href="#">Guías de Prevención</a>
+                    <a href="#">Para Educadores</a>
+                    <a href="#">Para Padres</a>
+                    <a href="#">Para Estudiantes</a>
+                </div>
+                
+                <div class="footer-section">
+                    <h4>Cuenta</h4>
+                    <a href="#">Iniciar Sesión</a>
+                    <a href="#">Registrarse</a>
+                    <a href="#">Soporte</a>
+                    <a href="#">Contacto</a>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; 2024 Cuidemos Nuestras Palabras. Todos los derechos reservados.</p>
+                <div class="footer-links">
+                    <a href="#">Privacidad</a>
+                    <a href="#">Términos</a>
+                    <a href="#">Cookies</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="scripts/dictionary.js"></script>
+</body>
+</html>

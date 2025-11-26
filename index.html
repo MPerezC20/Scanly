@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="Image/WebIcon-convertido-a-grande.jpeg">
+    <title>Scanly | Detector de Ciberacoso con IA</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles/styles.css">
+</head>
+
+<body>
+    <!-- Navigation -->
+        <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <!--<div class="logo-icon">🛡️</div> -->
+                <span class="logo-text">Scanly</span>
+            </div>
+            <div class="nav-menu">
+                <a href="#analyzer" class="nav-link">Analizador</a>
+                <a href="#features" class="nav-link">Características</a>
+                <a href="dictionary.html" class="nav-link">Diccionario</a>
+                
+                <!--<a href="#education" class="nav-link">Educación</a>
+                <div class="nav-buttons">
+                    <a href="login.html" class="btn-login">Iniciar Sesión</a>
+                    <a href="register.html" class="btn-register">Registrarse</a>
+                </div>-->
+            </div>
+            <div class="nav-toggle">
+                <i class="fas fa-bars"></i>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-background">
+            <div class="hero-shape shape-1"></div>
+            <div class="hero-shape shape-2"></div>
+            <div class="hero-shape shape-3"></div>
+        </div>
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-text">
+                    
+                    <h1 class="hero-title">
+                        Protege el 
+                        <span class="gradient-text">Bienestar Digital</span>
+                        de los Jóvenes
+                    </h1>
+                    <div class="badge">
+                        <i class="fas fa-robot"></i>
+                        Impulsado por IA
+                    </div>
+                    <p class="hero-description">
+                        Nuestra plataforma educativa utiliza inteligencia artificial para detectar y prevenir 
+                        el ciberacoso. Analiza mensajes en tiempo real, educa sobre comunicación respetuosa 
+                        y crea entornos digitales más seguros.
+                    </p>
+                    <div class="hero-stats">
+                        <div class="stat">
+                            <div class="stat-number">+95%</div>
+                            <div class="stat-label">Precisión en detección</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-number">+10K</div>
+                            <div class="stat-label">Mensajes analizados</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-number">24/7</div>
+                            <div class="stat-label">Disponible</div>
+                        </div>
+                    </div>
+                    <div class="hero-actions">
+                        <a href="#analyzer" class="btn-primary">
+                            <i class="fas fa-play"></i>
+                            Probar Analizador Gratis
+                        </a>
+                        <a href="#features" class="btn-secondary">
+                            <i class="fas fa-info-circle"></i>
+                            Conocer Más
+                        </a>
+                    </div>
+                </div>
+                <div class="hero-visual">
+                    <div class="visual-card">
+                        <div class="card-header">
+                            <div class="card-dots">
+                                <span></span>
+                                <span></span>
+                                <span></span>
+                            </div>
+                        </div>
+                        <div class="card-content">
+                            <div class="message received">
+                                <div class="message-avatar">👦</div>
+                                <div class="message-bubble">
+                                    "Oye, ¿viste la publicación de María? Qué fea se ve"
+                                </div>
+                            </div>
+                            <div class="message sent">
+                                <div class="message-bubble warning">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                    ❌ Contiene lenguaje ofensivo
+                                </div>
+                                <div class="message-avatar">🤖</div>
+                            </div>
+                            <div class="analysis-result">
+                                <div class="result-badge mild">
+                                    <i class="fas fa-shield-alt"></i>
+                                    Ofensivo Leve
+                                </div>
+                                <p>Palabra detectada: "fea" - Puede herir susceptibilidades</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Analyzer Section -->
+    <section id="analyzer" class="analyzer-section">
+        <div class="container">
+            <div class="section-header">
+                <h2>Analizador de Mensajes en Tiempo Real</h2>
+                <p>Escribe o pega cualquier mensaje para analizar su contenido automáticamente</p>
+            </div>
+            
+            <div class="analyzer-container">
+                <div class="input-panel">
+                    <div class="panel-header">
+                        <h3><i class="fas fa-edit"></i> Escribe tu mensaje</h3>
+                        <div class="text-counter">
+                            <span id="charCount">0</span> caracteres
+                        </div>
+                    </div>
+                    <textarea 
+                        id="messageInput" 
+                        placeholder="Ejemplo: 'Eres un inútil, nadie te aguanta en este grupo'"
+                        rows="6"
+                    ></textarea>
+                    <div class="panel-actions">
+                        <button id="analyzeBtn" class="btn-analyze">
+                            <i class="fas fa-search"></i>
+                            Analizar Mensaje
+                        </button>
+                        <button id="clearBtn" class="btn-clear">
+                            <i class="fas fa-eraser"></i>
+                            Limpiar
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="results-panel">
+                    <div class="panel-header">
+                        <h3>Resultado del Análisis</h3>
+                        <div class="confidence-score">
+                            <span id="confidenceText">Confianza: --%</span>  <!-- ← DEJA VACÍO O --% -->
+                        </div>
+                    </div>
+                    
+                    <div id="welcomeMessage" class="welcome-state">
+                        <div class="welcome-icon">
+                            <i class="fas fa-robot"></i>
+                        </div>
+                        <h4>Bienvenido al Analizador</h4>
+                        <p>Escribe un mensaje en el panel izquierdo para comenzar el análisis de contenido ofensivo.</p>
+                        <div class="features-list">
+                            <div class="feature">
+                                <i class="fas fa-check-circle"></i>
+                                Detección de insultos y lenguaje ofensivo
+                            </div>
+                            <div class="feature">
+                                <i class="fas fa-check-circle"></i>
+                                Identificación de amenazas y acoso
+                            </div>
+                            <div class="feature">
+                                <i class="fas fa-check-circle"></i>
+                                Análisis de discriminación y exclusión
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="resultsContainer" class="results-state hidden">
+                        <div class="classification-result">
+                            <div class="classification-badge" id="classificationBadge">
+                                <i class="fas fa-shield-alt"></i>
+                                <span id="classificationText">Inofensivo</span>
+                            </div>
+                        </div>
+                        
+                        <div class="explanation-box">
+                            <h5><i class="fas fa-lightbulb"></i> Explicación</h5>
+                            <p id="explanationText">El mensaje no contiene lenguaje ofensivo detectable.</p>
+                        </div>
+                        
+                        <div class="detections-box">
+                            <h5><i class="fas fa-search"></i> Contenido Detectado</h5>
+                            <div class="detections-list" id="detectionsList">
+                                <!-- Las detecciones se llenarán aquí -->
+                            </div>
+                        </div>
+                        
+                        <div class="suggestions-box">
+                            <h5><i class="fas fa-hands-helping"></i> Sugerencias</h5>
+                            <p id="suggestionsText">Continúa comunicándote de manera respetuosa.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="features-section">
+        <div class="container">
+            <div class="section-header">
+                <h2>Por Qué Elegir Nuestra Plataforma</h2>
+                <p>Herramientas avanzadas para combatir el ciberacoso de manera efectiva</p>
+            </div>
+            
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon ai">
+                        <i class="fas fa-brain"></i>
+                    </div>
+                    <h3>Inteligencia Artificial Avanzada</h3>
+                    <p>Tecnología de vanguardia que aprende y se adapta al lenguaje juvenil actual con más del 95% de precisión.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon education">
+                        <i class="fas fa-graduation-cap"></i>
+                    </div>
+                    <h3>Enfoque Educativo</h3>
+                    <p>No solo detectamos, sino que educamos con explicaciones claras y alternativas de comunicación respetuosa.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon realtime">
+                        <i class="fas fa-bolt"></i>
+                    </div>
+                    <h3>Análisis en Tiempo Real</h3>
+                    <p>Resultados instantáneos que permiten intervenir rápidamente en situaciones potencialmente dañinas.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon privacy">
+                        <i class="fas fa-user-shield"></i>
+                    </div>
+                    <h3>Privacidad Garantizada</h3>
+                    <p>Tus mensajes se analizan de forma segura y no se almacenan sin tu permiso explícito.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon multilingual">
+                        <i class="fas fa-language"></i>
+                    </div>
+                    <h3>Multilenguaje</h3>
+                    <p>Soporte para español y adaptación a expresiones locales y jerga juvenil de diferentes regiones.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon accessible">
+                        <i class="fas fa-universal-access"></i>
+                    </div>
+                    <h3>Accesible para Todos</h3>
+                    <p>Interfaz intuitiva diseñada para jóvenes, padres y educadores sin necesidad de conocimientos técnicos.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <div class="container">
+            <div class="cta-content">
+                <h2>Comienza a Crear Entornos Digitales Más Seguros</h2>
+                <p>Únete a miles de usuarios que ya están usando nuestra plataforma para promover el respeto y la empatía en línea.</p>
+                <div class="cta-buttons">
+                    <a href="#analyzer" class="btn-primary large">
+                        <i class="fas fa-rocket"></i>
+                        Comenzar Gratis
+                    </a>
+                    <a href="dictionary.html" class="btn-secondary large">
+                        <i class="fas fa-book"></i>
+                        Ver Diccionario
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <div class="footer-logo">
+                        <!--<div class="logo-icon">🛡️</div>-->
+                        <span class="logo-text">Scanly</span>
+                    </div>
+                    <p>Plataforma educativa para detectar y prevenir el ciberacoso mediante inteligencia artificial.</p>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-facebook"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-linkedin"></i></a>
+                    </div>
+                </div>
+                
+                <div class="footer-section">
+                    <h4>Enlaces Rápidos</h4>
+                    <a href="#analyzer">Analizador</a>
+                    <a href="#features">Características</a>
+                    <a href="dictionary.html">Diccionario</a>
+                    <!--<a href="#education">Educación</a>-->
+                </div>
+                
+                <div class="footer-section">
+                    <h4>Recursos</h4>
+                    <a href="#">Guías de Prevención</a>
+                    <a href="#">Para Educadores</a>
+                    <a href="#">Para Padres</a>
+                    <a href="#">Para Estudiantes</a>
+                </div>
+                
+                <div class="footer-section">
+                    <h4>Cuenta</h4>
+                    <a href="#">Iniciar Sesión</a>
+                    <a href="#">Registrarse</a>
+                    <a href="#">Soporte</a>
+                    <a href="#">Contacto</a>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; 2025 Cuidemos Nuestras Palabras. Todos los derechos reservados.</p>
+                <div class="footer-links">
+                    <a href="#">Privacidad</a>
+                    <a href="#">Términos</a>
+                    <a href="#">Cookies</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- En la sección de scripts, agrega esto ANTES de main.js -->
+    <script src="scripts/openai-api.js"></script>
+    <script src="scripts/main.js"></script>
+</body>
+</html>

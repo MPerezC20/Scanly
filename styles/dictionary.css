@@ -1,0 +1,353 @@
+/* Dictionary Styles */
+.dictionary-hero {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 8rem 0 4rem;
+    text-align: center;
+}
+
+.dictionary-hero h1 {
+    font-size: 3rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+}
+
+.dictionary-hero p {
+    font-size: 1.3rem;
+    opacity: 0.9;
+    margin-bottom: 2rem;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.search-box {
+    position: relative;
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+.search-box i {
+    position: absolute;
+    left: 1.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--gray);
+}
+
+.search-box input {
+    width: 100%;
+    padding: 1.2rem 1.5rem 1.2rem 3.5rem;
+    border: none;
+    border-radius: 50px;
+    font-size: 1.1rem;
+    box-shadow: var(--shadow);
+}
+
+.search-box input:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3);
+}
+
+.dictionary-content {
+    padding: 4rem 0;
+    background: var(--light);
+}
+
+.dictionary-nav {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 3rem;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.nav-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem 1.5rem;
+    border: 2px solid var(--gray-light);
+    background: white;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    color: var(--dark);
+}
+
+.nav-btn:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+    transform: translateY(-2px);
+}
+
+.nav-btn.active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: white;
+}
+
+.dictionary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 2rem;
+    margin-bottom: 4rem;
+}
+
+.dictionary-card {
+    background: white;
+    border-radius: 20px;
+    padding: 2rem;
+    box-shadow: var(--shadow);
+    transition: all 0.3s ease;
+    border-left: 4px solid;
+    position: relative;
+    overflow: hidden;
+}
+
+.dictionary-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-lg);
+}
+
+.dictionary-card.insults {
+    border-left-color: #ef4444;
+}
+
+.dictionary-card.discrimination {
+    border-left-color: #8b5cf6;
+}
+
+.dictionary-card.threats {
+    border-left-color: #f59e0b;
+}
+
+.dictionary-card.exclusion {
+    border-left-color: #64748b;
+}
+
+.dictionary-card.sexual {
+    border-left-color: #ec4899;
+}
+
+.card-category {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    padding: 0.4rem 1rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.card-category.insults {
+    background: #fef2f2;
+    color: #dc2626;
+}
+
+.card-category.discrimination {
+    background: #faf5ff;
+    color: #7c3aed;
+}
+
+.card-category.threats {
+    background: #fffbeb;
+    color: #d97706;
+}
+
+.card-category.exclusion {
+    background: #f1f5f9;
+    color: #475569;
+}
+
+.card-category.sexual {
+    background: #fdf2f8;
+    color: #db2777;
+}
+
+.card-header {
+    margin-bottom: 1.5rem;
+    padding-right: 80px;
+}
+
+.card-header h3 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--darker);
+    margin-bottom: 0.5rem;
+}
+
+.card-description {
+    color: var(--gray);
+    line-height: 1.5;
+    margin-bottom: 1.5rem;
+}
+
+.examples-section {
+    margin-bottom: 1.5rem;
+}
+
+.examples-section h4 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+    color: var(--darker);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.examples-section h4 i {
+    font-size: 0.9rem;
+}
+
+.examples-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.example-item {
+    padding: 0.75rem;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+.example-item.bad {
+    background: #fef2f2;
+    border-left: 3px solid #ef4444;
+    color: #991b1b;
+}
+
+.example-item.good {
+    background: #f0fdf4;
+    border-left: 3px solid #22c55e;
+    color: #166534;
+}
+
+.impact-section {
+    background: #fffbeb;
+    border: 1px solid #fef3c7;
+    border-radius: 12px;
+    padding: 1rem;
+    margin-top: 1rem;
+}
+
+.impact-section h4 {
+    color: #92400e;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.impact-section p {
+    color: #92400e;
+    font-size: 0.85rem;
+    line-height: 1.4;
+    margin: 0;
+}
+
+/* Educational Resources */
+.educational-section {
+    margin-top: 4rem;
+    padding-top: 4rem;
+    border-top: 2px solid var(--gray-light);
+}
+
+.educational-section h2 {
+    text-align: center;
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 3rem;
+    color: var(--darker);
+}
+
+.resources-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+}
+
+.resource-card {
+    background: white;
+    padding: 2.5rem 2rem;
+    border-radius: 20px;
+    text-align: center;
+    box-shadow: var(--shadow);
+    transition: all 0.3s ease;
+}
+
+.resource-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-lg);
+}
+
+.resource-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: var(--gradient);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    color: white;
+    margin: 0 auto 1.5rem;
+}
+
+.resource-card h3 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    color: var(--darker);
+}
+
+.resource-card p {
+    color: var(--gray);
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+}
+
+.resource-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--primary);
+    text-decoration: none;
+    font-weight: 600;
+    transition: gap 0.3s ease;
+}
+
+.resource-link:hover {
+    gap: 0.75rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .dictionary-hero {
+        padding: 6rem 0 3rem;
+    }
+    
+    .dictionary-hero h1 {
+        font-size: 2.2rem;
+    }
+    
+    .dictionary-nav {
+        gap: 0.5rem;
+    }
+    
+    .nav-btn {
+        padding: 0.75rem 1rem;
+        font-size: 0.9rem;
+    }
+    
+    .dictionary-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .resources-grid {
+        grid-template-columns: 1fr;
+    }
+}
