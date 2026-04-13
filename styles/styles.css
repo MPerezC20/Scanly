@@ -904,3 +904,231 @@ body {
         justify-content: center;
     }
 }
+
+/* ========== ESTADÍSTICAS ========== */
+.statistics-section {
+    padding: 80px 0;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 30px;
+    margin-bottom: 50px;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 20px;
+    padding: 25px;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-10px);
+}
+
+.stat-icon {
+    width: 70px;
+    height: 70px;
+    margin: 0 auto 20px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 28px;
+}
+
+.stat-card h3 {
+    font-size: 18px;
+    color: #666;
+    margin-bottom: 10px;
+}
+
+.stat-number {
+    font-size: 48px;
+    font-weight: bold;
+    color: #333;
+    margin: 10px 0;
+}
+
+.stat-description {
+    font-size: 14px;
+    color: #999;
+}
+
+.chart-container {
+    background: white;
+    border-radius: 20px;
+    padding: 30px;
+    margin-bottom: 40px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+.chart-header {
+    margin-bottom: 20px;
+}
+
+.chart-header h3 {
+    font-size: 20px;
+    color: #333;
+}
+
+canvas {
+    background: #f8f9fa;
+    border-radius: 10px;
+    margin: 20px 0;
+}
+
+.chart-empty-message {
+    text-align: center;
+    padding: 60px;
+    color: #999;
+}
+
+.top-words-container {
+    background: white;
+    border-radius: 20px;
+    padding: 30px;
+    margin-bottom: 40px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+.top-words-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    flex-wrap: wrap;
+}
+
+.top-words-header h3 {
+    font-size: 20px;
+    color: #333;
+}
+
+.badge-info {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+}
+
+.top-words-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 15px;
+}
+
+.word-card {
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.3s ease;
+}
+
+.word-card:hover {
+    background: #e9ecef;
+    transform: translateX(5px);
+}
+
+.word-text {
+    font-weight: 600;
+    color: #dc3545;
+    font-size: 16px;
+}
+
+.word-text i {
+    margin-right: 8px;
+    color: #667eea;
+}
+
+.word-count {
+    background: #667eea;
+    color: white;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.learning-status {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 15px;
+    padding: 25px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    color: white;
+    flex-wrap: wrap;
+}
+
+.status-icon {
+    font-size: 40px;
+}
+
+.status-text {
+    flex: 1;
+}
+
+.status-text strong {
+    font-size: 18px;
+    display: block;
+    margin-bottom: 5px;
+}
+
+.status-text p {
+    font-size: 14px;
+    opacity: 0.9;
+    margin: 0;
+}
+
+.status-badge {
+    background: rgba(255,255,255,0.2);
+    padding: 8px 15px;
+    border-radius: 25px;
+    font-size: 14px;
+}
+
+.loading-spinner {
+    text-align: center;
+    padding: 40px;
+    color: #999;
+}
+
+.loading-spinner i {
+    font-size: 32px;
+    margin-bottom: 10px;
+}
+
+.hidden {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .stat-number {
+        font-size: 36px;
+    }
+    
+    .top-words-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .learning-status {
+        flex-direction: column;
+        text-align: center;
+    }
+}

@@ -1,12 +1,225 @@
-// scripts/main.js - VERSIÓN COMPLETA CON PORCENTAJE DINÁMICO
-document.addEventListener('DOMContentLoaded', function() {
-    // ✅ INICIALIZAR OPENAI SIN PARÁMETROS
+// Modificar el DOMContentLoaded existente
+document.addEventListener('DOMContentLoaded', async function() {
+    // Cargar estadísticas al iniciar
+    await loadStatistics();
+    await loadWeeklyStats();
+    await loadTopWords();
+    
+    // Inicializar OpenAI
     initializeOpenAI();
     
-    // Resto del código de inicialización
+    // Inicializar analizador
     initializeAnalyzer();
     setupEventListeners();
-});
+    
+    console.log('✅ Sistema listo - Las estadísticas se actualizarán automáticamente');
+});     
+// scripts/main.js - AGREGAR ESTAS FUNCIONES AL INICIO
+
+// ========== CONFIGURACIÓN API ==========
+const API_URL = 'http://localhost:3000/api';
+
+// ========== FUNCIONES DE ESTADÍSTICAS ==========
+
+// Cargar estadísticas desde la BD
+async function loadStatistics() {
+    try {
+        const response = await fetch(`${API_URL}/statistics`);
+        if (!response.ok) throw new Error('Error cargando estadísticas');
+        const stats = await response.json();
+        
+        // Actualizar números
+        const learnedWordsEl = document.getElementById('totalLearnedWords');
+        const detectionsEl = document.getElementById('totalDetections');
+        const avgConfidenceEl = document.getElementById('avgConfidence');
+        
+        if (learnedWordsEl) learnedWordsEl.textContent = stats.totalLearnedWords || 0;
+        if (detectionsEl) detectionsEl.textContent = stats.totalDetections || 0;
+        
+        // Calcular confianza promedio
+        const avgConfidence = stats.avgConfidence ? Math.round(stats.avgConfidence * 100) : 85;
+        if (avgConfidenceEl) avgConfidenceEl.textContent = `${avgConfidence}%`;
+        
+        return stats;
+    } catch (error) {
+        console.log('Servidor no disponible, usando modo offline');
+        return null;
+    }
+}
+
+// Cargar estadísticas semanales
+async function loadWeeklyStats() {
+    try {
+        const response = await fetch(`${API_URL}/weekly-stats`);
+        if (!response.ok) throw new Error('Error cargando stats semanales');
+        const stats = await response.json();
+        drawWeeklyChart(stats);
+        return stats;
+    } catch (error) {
+        console.log('No se pudo cargar gráfico semanal');
+        showChartEmpty();
+        return [];
+    }
+}
+
+// Dibujar gráfico semanal
+function drawWeeklyChart(data) {
+    const canvas = document.getElementById('weeklyChart');
+    if (!canvas) return;
+    
+    const ctx = canvas.getContext('2d');
+    const container = canvas.parentElement;
+    
+    // Ajustar tamaño
+    canvas.width = Math.min(700, container.clientWidth - 40);
+    canvas.height = 250;
+    
+    // Limpiar canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    if (!data || data.length === 0) {
+        showChartEmpty();
+        return;
+    }
+    
+    hideChartEmpty();
+    
+    // Preparar datos
+    const dates = data.map(d => {
+        const date = new Date(d.date);
+        return `${date.getDate()}/${date.getMonth() + 1}`;
+    });
+    const detections = data.map(d => d.detections);
+    const maxDetection = Math.max(...detections, 1);
+    
+    // Configurar gráfico
+    const padding = 40;
+    const chartWidth = canvas.width - padding * 2;
+    const chartHeight = canvas.height - padding * 2;
+    const barWidth = (chartWidth / dates.length) - 8;
+    
+    // Dibujar ejes
+    ctx.beginPath();
+    ctx.strokeStyle = '#ccc';
+    ctx.lineWidth = 1;
+    ctx.moveTo(padding, padding);
+    ctx.lineTo(padding, canvas.height - padding);
+    ctx.lineTo(canvas.width - padding, canvas.height - padding);
+    ctx.stroke();
+    
+    // Dibujar barras
+    for (let i = 0; i < dates.length; i++) {
+        const x = padding + i * (barWidth + 8);
+        const height = (detections[i] / maxDetection) * chartHeight;
+        const y = canvas.height - padding - height;
+        
+        // Barra
+        ctx.fillStyle = '#667eea';
+        ctx.fillRect(x, y, barWidth, Math.max(height, 2));
+        
+        // Etiqueta
+        ctx.fillStyle = '#666';
+        ctx.font = '9px Arial';
+        ctx.fillText(dates[i], x + barWidth / 2 - 12, canvas.height - padding + 12);
+        
+        // Valor
+        if (detections[i] > 0) {
+            ctx.fillStyle = '#333';
+            ctx.font = '10px Arial';
+            ctx.fillText(detections[i], x + barWidth / 2 - 8, y - 5);
+        }
+    }
+}
+
+function showChartEmpty() {
+    const emptyMsg = document.getElementById('chartEmptyMessage');
+    if (emptyMsg) emptyMsg.classList.remove('hidden');
+}
+
+function hideChartEmpty() {
+    const emptyMsg = document.getElementById('chartEmptyMessage');
+    if (emptyMsg) emptyMsg.classList.add('hidden');
+}
+
+// Cargar top palabras
+async function loadTopWords() {
+    try {
+        const response = await fetch(`${API_URL}/top-words`);
+        if (!response.ok) throw new Error('Error cargando top palabras');
+        const words = await response.json();
+        displayTopWords(words);
+        return words;
+    } catch (error) {
+        console.log('No se pudieron cargar top palabras');
+        displayTopWords([]);
+        return [];
+    }
+}
+
+function displayTopWords(words) {
+    const container = document.getElementById('topWordsList');
+    if (!container) return;
+    
+    if (!words || words.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state" style="text-align:center; padding:40px; color:#999;">
+                <i class="fas fa-inbox" style="font-size:48px; margin-bottom:15px;"></i>
+                <p>Aún no hay palabras detectadas</p>
+                <small>Analiza mensajes para ver estadísticas</small>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = words.slice(0, 6).map(word => `
+        <div class="word-card">
+            <span class="word-text">
+                <i class="fas fa-comment-dots"></i> ${word.detected_word}
+            </span>
+            <span class="word-count">${word.times} veces</span>
+        </div>
+    `).join('');
+}
+
+// ========== FUNCIÓN PARA REGISTRAR DETECCIONES ==========
+async function registerDetection(detectionData) {
+    try {
+        const response = await fetch(`${API_URL}/register-detection`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(detectionData)
+        });
+        const data = await response.json();
+        console.log('✅ Detección registrada en BD');
+        
+        // Actualizar estadísticas después de registrar
+        setTimeout(() => {
+            loadStatistics();
+            loadWeeklyStats();
+            loadTopWords();
+        }, 500);
+        
+        return data;
+    } catch (error) {
+        console.log('Modo offline: detección no registrada en BD');
+        return null;
+    }
+}
+
+// ========== DECODIFICAR LEET SPEAK ==========
+function decodeLeetSpeak(text) {
+    const leetMap = {
+        '0': 'o', '1': 'i', '3': 'e', '4': 'a', '5': 's',
+        '7': 't', '8': 'b', '@': 'a', '$': 's', '!': 'i',
+        '|': 'l', 'ph': 'f', 'ck': 'k'
+    };
+    
+    let decoded = text.toLowerCase();
+    for (let [leet, letter] of Object.entries(leetMap)) {
+        decoded = decoded.replace(new RegExp(leet, 'g'), letter);
+    }
+    return decoded;
+}
 
 // Contador de caracteres
 const messageInput = document.getElementById('messageInput');
@@ -170,11 +383,10 @@ function initializeAnalyzer() {
     });
 }
 
-// ✅ FUNCIÓN DE FALLBACK MEJORADA (ANÁLISIS SIMULADO)
+// FUNCIÓN DE FALLBACK MEJORADA CON REGISTRO EN BD
 async function analyzeMessageSimulated(message) {
-    return new Promise((resolve) => {
-        setTimeout(() => {
-            // ✅ SI NO HAY MENSAJE, DEVOLVER 0%
+    return new Promise(async (resolve) => {
+        setTimeout(async () => {
             if (!message || message.trim().length === 0) {
                 resolve({
                     classification: 'harmless',
@@ -186,78 +398,109 @@ async function analyzeMessageSimulated(message) {
                 return;
             }
 
-            const offensiveWords = ['idiota', 'estúpido', 'tonto', 'feo', 'gordo', 'raro', 'inútil'];
+            const offensiveWords = ['idiota', 'estúpido', 'tonto', 'feo', 'gordo', 'raro', 'inútil', 'perdedor', 'bruto'];
             const hateWords = ['odio', 'asco', 'desprecio', 'eliminar', 'matar', 'muerte', 'violar'];
-            const threatWords = ['te voy a', 'vas a ver', 'te arrepentirás', 'muerte', 'matar', 'amenazo'];
+            const threatWords = ['te voy a', 'vas a ver', 'te arrepentirás', 'amenazo'];
             
             let classification = 'harmless';
             let explanation = 'El mensaje no contiene lenguaje ofensivo detectable.';
             let detected = [];
             let suggestions = 'Continúa comunicándote de manera respetuosa.';
-            let confidence = 15; // Base baja para inofensivo
+            let confidence = 15;
             
             const lowerMessage = message.toLowerCase();
+            const words = message.split(/\s+/);
             
-            // Detectar palabras ofensivas
+            // Detectar palabras ocultas (Leet Speak)
+            let hiddenWordsFound = [];
+            for (let word of words) {
+                const cleanWord = word.replace(/[.,!?;:()]/g, '');
+                const decoded = decodeLeetSpeak(cleanWord);
+                
+                for (let offensive of offensiveWords) {
+                    if (decoded === offensive || (decoded.includes(offensive) && decoded.length > 3)) {
+                        hiddenWordsFound.push({
+                            original: cleanWord,
+                            decoded: decoded,
+                            mapsTo: offensive
+                        });
+                        detected.push(`Palabra oculta: "${cleanWord}" → significa "${offensive}"`);
+                        break;
+                    }
+                }
+            }
+            
+            // Detectar palabras ofensivas normales
             offensiveWords.forEach(word => {
                 if (lowerMessage.includes(word)) {
-                    detected.push(`Insulto: "${word}"`);
+                    if (!detected.some(d => d.includes(word))) {
+                        detected.push(`Insulto: "${word}"`);
+                    }
                 }
             });
             
             // Detectar discurso de odio
             hateWords.forEach(word => {
                 if (lowerMessage.includes(word)) {
-                    detected.push(`Discurso de odio: "${word}"`);
+                    if (!detected.some(d => d.includes(word))) {
+                        detected.push(`Discurso de odio: "${word}"`);
+                    }
                 }
             });
             
             // Detectar amenazas
             threatWords.forEach(word => {
                 if (lowerMessage.includes(word)) {
-                    detected.push(`Amenaza: "${word}"`);
+                    if (!detected.some(d => d.includes(word))) {
+                        detected.push(`Amenaza: "${word}"`);
+                    }
                 }
             });
             
-            // Determinar clasificación y confianza (0-100)
-            const hasThreat = detected.some(item => item.includes('Amenaza')) || 
-                             lowerMessage.includes('matar') || 
-                             lowerMessage.includes('muerte');
-            
+            // Determinar clasificación y confianza
+            const hasThreat = detected.some(item => item.includes('Amenaza'));
             const hasHateSpeech = detected.some(item => item.includes('Discurso de odio'));
-            const offensiveCount = detected.length;
+            const offensiveCount = detected.filter(d => d.includes('Insulto') || d.includes('Palabra oculta')).length;
 
             if (hasThreat) {
                 classification = 'hate';
-                explanation = 'El mensaje contiene lenguaje amenazante que puede constituir discurso de odio.';
+                explanation = '⚠️ El mensaje contiene lenguaje amenazante que puede constituir discurso de odio.';
                 suggestions = 'Este tipo de comunicación es muy grave. Considera buscar ayuda si estás en una situación de riesgo.';
-                confidence = 95 + Math.floor(Math.random() * 5); // 95-99%
+                confidence = 95 + Math.floor(Math.random() * 5);
             } else if (hasHateSpeech) {
                 classification = 'hate';
-                explanation = 'El mensaje contiene expresiones de odio o desprecio hacia otras personas.';
+                explanation = '⚠️ El mensaje contiene expresiones de odio o desprecio hacia otras personas.';
                 suggestions = 'El lenguaje de odio puede causar daños psicológicos graves. Reflexiona sobre el impacto de tus palabras.';
-                confidence = 90 + Math.floor(Math.random() * 5); // 90-94%
+                confidence = 90 + Math.floor(Math.random() * 5);
             } else if (offensiveCount >= 3) {
                 classification = 'serious';
-                explanation = 'El mensaje contiene múltiples expresiones ofensivas y lenguaje claramente inapropiado.';
+                explanation = '⚠️ El mensaje contiene múltiples expresiones ofensivas y lenguaje claramente inapropiado.';
                 suggestions = 'Reflexiona sobre el impacto de tus palabras en los demás. La comunicación respetuosa es fundamental.';
-                confidence = 80 + Math.floor(Math.random() * 10); // 80-89%
+                confidence = 80 + Math.floor(Math.random() * 10);
             } else if (offensiveCount >= 2) {
                 classification = 'serious';
-                explanation = 'El mensaje contiene lenguaje ofensivo grave.';
+                explanation = '⚠️ El mensaje contiene lenguaje ofensivo grave.';
                 suggestions = 'Considera expresar tus ideas sin recurrir a insultos o lenguaje ofensivo.';
-                confidence = 75 + Math.floor(Math.random() * 5); // 75-79%
-            } else if (offensiveCount === 1) {
+                confidence = 75 + Math.floor(Math.random() * 5);
+            } else if (offensiveCount === 1 || hiddenWordsFound.length > 0) {
                 classification = 'mild';
-                explanation = 'El mensaje contiene lenguaje ofensivo leve.';
+                explanation = '⚠️ El mensaje contiene lenguaje ofensivo leve.';
                 suggestions = 'Piensa en cómo te sentirías si recibieras este mensaje. Considera reformularlo de manera más respetuosa.';
-                confidence = 60 + Math.floor(Math.random() * 10); // 60-69%
+                confidence = 60 + Math.floor(Math.random() * 10);
             } else {
-                // Mensaje inofensivo
-                explanation = '¡Excelente! El mensaje muestra comunicación respetuosa.';
+                explanation = '✅ ¡Excelente! El mensaje muestra comunicación respetuosa.';
                 suggestions = 'Continúa practicando una comunicación positiva y constructiva.';
-                confidence = 10 + Math.floor(Math.random() * 15); // 10-24%
+                confidence = 10 + Math.floor(Math.random() * 15);
             }
+            
+            // REGISTRAR EN BASE DE DATOS
+            await registerDetection({
+                originalText: message,
+                detectedWord: detected.join(', ') || 'ninguna',
+                category: classification,
+                confidence: confidence / 100,
+                wasHidden: hiddenWordsFound.length > 0
+            });
             
             resolve({
                 classification,

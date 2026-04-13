@@ -1,9 +1,219 @@
-// scripts/openai-api.js - ACTUALIZADO con rangos 0-100
+// scripts/openai-api.js - VERSIÓN CON APRENDIZAJE AUTOMÁTICO
+
+// ========== CONFIGURACIÓN API ==========
+const API_URL = 'http://localhost:3000/api';
+
 class OpenAIAnalyzer {
     constructor() {
         this.baseURL = 'https://api.openai.com/v1/chat/completions';
+        this.learnedWordsCache = new Map(); // Caché de palabras aprendidas
+        this.hiddenPatterns = {
+            '0': 'o', '1': 'i', '3': 'e', '4': 'a', '5': 's',
+            '7': 't', '8': 'b', '@': 'a', '$': 's', '!': 'i',
+            '|': 'l', 'ph': 'f', 'ck': 'k', 'zz': 'ss'
+        };
     }
 
+    // ========== CARGAR PALABRAS APRENDIDAS DESDE BD ==========
+    async loadLearnedWords() {
+        try {
+            const response = await fetch(`${API_URL}/learned-words`);
+            if (response.ok) {
+                const words = await response.json();
+                words.forEach(word => {
+                    this.learnedWordsCache.set(word.word.toLowerCase(), word);
+                });
+                console.log(`📚 Cargadas ${words.length} palabras aprendidas desde BD`);
+            }
+        } catch (error) {
+            console.log('No se pudieron cargar palabras aprendidas');
+        }
+    }
+
+    // ========== DECODIFICAR PALABRAS OCULTAS ==========
+    decodeHiddenWord(word) {
+        let decoded = word.toLowerCase();
+        
+        // Aplicar patrones de leet speak
+        for (let [leet, letter] of Object.entries(this.hiddenPatterns)) {
+            const regex = new RegExp(leet, 'gi');
+            decoded = decoded.replace(regex, letter);
+        }
+        
+        // Eliminar caracteres repetidos excesivos
+        decoded = decoded.replace(/(.)\1{2,}/g, '$1$1');
+        
+        return decoded;
+    }
+
+    // ========== DETECTAR VARIACIONES OCULTAS ==========
+    detectHiddenVariations(word, knownWordsList) {
+        const decoded = this.decodeHiddenWord(word);
+        
+        for (let knownWord of knownWordsList) {
+            // Comparación exacta después de decodificar
+            if (decoded === knownWord) {
+                return {
+                    isHidden: true,
+                    originalWord: knownWord,
+                    decodedWord: decoded,
+                    confidence: 0.95,
+                    variation: word
+                };
+            }
+            
+            // Contiene la palabra ofensiva
+            if (decoded.includes(knownWord) && decoded.length > knownWord.length) {
+                return {
+                    isHidden: true,
+                    originalWord: knownWord,
+                    decodedWord: decoded,
+                    confidence: 0.85,
+                    variation: word
+                };
+            }
+            
+            // Distancia de Levenshtein para palabras similares
+            const distance = this.levenshteinDistance(decoded, knownWord);
+            const maxLen = Math.max(decoded.length, knownWord.length);
+            const similarity = 1 - (distance / maxLen);
+            
+            if (similarity > 0.7 && decoded.length > 3) {
+                return {
+                    isHidden: true,
+                    originalWord: knownWord,
+                    decodedWord: decoded,
+                    confidence: similarity,
+                    variation: word
+                };
+            }
+        }
+        
+        return { isHidden: false };
+    }
+
+    // Algoritmo de distancia de Levenshtein
+    levenshteinDistance(a, b) {
+        const matrix = [];
+        for (let i = 0; i <= b.length; i++) {
+            matrix[i] = [i];
+        }
+        for (let j = 0; j <= a.length; j++) {
+            matrix[0][j] = j;
+        }
+        for (let i = 1; i <= b.length; i++) {
+            for (let j = 1; j <= a.length; j++) {
+                if (b.charAt(i - 1) === a.charAt(j - 1)) {
+                    matrix[i][j] = matrix[i - 1][j - 1];
+                } else {
+                    matrix[i][j] = Math.min(
+                        matrix[i - 1][j - 1] + 1,
+                        matrix[i][j - 1] + 1,
+                        matrix[i - 1][j] + 1
+                    );
+                }
+            }
+        }
+        return matrix[b.length][a.length];
+    }
+
+    // ========== APRENDER NUEVA PALABRA EN BD ==========
+    async learnNewWord(word, category, confidence, mapsTo = null) {
+        try {
+            const response = await fetch(`${API_URL}/learn`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    word: word.toLowerCase(),
+                    category: category,
+                    confidence: confidence,
+                    mapsTo: mapsTo
+                })
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                // Actualizar caché
+                this.learnedWordsCache.set(word.toLowerCase(), {
+                    word: word.toLowerCase(),
+                    category: category,
+                    confidence: confidence,
+                    maps_to: mapsTo
+                });
+                console.log(`🧠 IA aprendió nueva palabra: "${word}" → ${mapsTo || category}`);
+                return data;
+            }
+        } catch (error) {
+            console.log('No se pudo aprender palabra (servidor no disponible)');
+        }
+        return null;
+    }
+
+    // ========== REGISTRAR DETECCIÓN EN BD ==========
+    async registerDetection(detectionData) {
+        try {
+            const response = await fetch(`${API_URL}/register-detection`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(detectionData)
+            });
+            return await response.json();
+        } catch (error) {
+            console.log('No se pudo registrar detección');
+            return null;
+        }
+    }
+
+    // ========== PROMPT MEJORADO PARA APRENDIZAJE ==========
+    createPrompt(message, learnedWordsContext) {
+        // Crear contexto de palabras aprendidas
+        let learnedContext = "";
+        if (learnedWordsContext && learnedWordsContext.length > 0) {
+            const topLearned = learnedWordsContext.slice(0, 10);
+            learnedContext = `
+Palabras previamente aprendidas como ofensivas: ${topLearned.map(w => `"${w.word}"`).join(', ')}
+`;
+        }
+
+        return `
+${learnedContext}
+Analiza el siguiente mensaje para detectar ciberacoso y lenguaje ofensivo. 
+IMPORTANTE: Identifica también variaciones ocultas (Leet speak, caracteres especiales, combinaciones) que intenten evadir la detección.
+
+Responde EXCLUSIVAMENTE con un objeto JSON en este formato:
+
+{
+    "classification": "inofensivo|ofensivo_leve|ofensivo_grave|discurso_odio",
+    "detected_categories": ["lenguaje_sexual", "amenazas", "discriminatorio", "bullying", "racista"],
+    "explanation": "Explicación clara y educativa en español",
+    "offensive_phrases": ["frase1", "frase2"],
+    "hidden_variations": ["variación1", "variación2"],
+    "suggestions": "Sugerencias para mejorar la comunicación",
+    "confidence_score": 85,
+    "new_words_to_learn": [
+        {"word": "palabra_oculta", "maps_to": "palabra_real", "confidence": 85}
+    ]
+}
+
+Mensaje a analizar: "${message}"
+
+Instrucciones para "new_words_to_learn":
+- Si encuentras una variación oculta (ej: "1d10t4" para "idiota"), inclúyela en este array
+- "word": la variación encontrada
+- "maps_to": la palabra ofensiva original a la que hace referencia
+- "confidence": qué tan seguro estás (0-100)
+
+Reglas de clasificación:
+- "inofensivo": No contiene lenguaje ofensivo
+- "ofensivo_leve": Insultos leves, burlas suaves
+- "ofensivo_grave": Insultos graves, acoso claro
+- "discurso_odio": Amenazas directas, discriminación grave
+
+Responde SOLO con el objeto JSON, sin texto adicional.
+        `;
+    }
+
+    // ========== ANÁLISIS PRINCIPAL CON APRENDIZAJE ==========
     async analyzeMessage(message) {
         if (!this.apiKey || this.apiKey === 'sk-tu-api-key-real-aqui') {
             throw new Error('Configura tu API Key de OpenAI en openai-api.js');
@@ -13,7 +223,31 @@ class OpenAIAnalyzer {
             throw new Error('El mensaje no puede estar vacío');
         }
 
-        const prompt = this.createPrompt(message);
+        // Obtener palabras conocidas para detección local
+        const knownWords = Array.from(this.learnedWordsCache.values());
+        const words = message.split(/\s+/);
+        
+        // PRIMERO: Detección local de palabras ocultas (más rápido)
+        let localHiddenWords = [];
+        for (let word of words) {
+            const cleanWord = word.replace(/[.,!?;:()]/g, '');
+            const hiddenCheck = this.detectHiddenVariations(cleanWord, 
+                ['idiota', 'estúpido', 'tonto', 'feo', 'gordo', 'inútil', 'perdedor', 'bruto']
+            );
+            
+            if (hiddenCheck.isHidden) {
+                localHiddenWords.push(hiddenCheck);
+                // Aprender inmediatamente esta variación
+                await this.learnNewWord(
+                    hiddenCheck.variation,
+                    'cyberbullying_variant',
+                    hiddenCheck.confidence,
+                    hiddenCheck.originalWord
+                );
+            }
+        }
+
+        const prompt = this.createPrompt(message, knownWords);
 
         try {
             const response = await fetch(this.baseURL, {
@@ -27,7 +261,7 @@ class OpenAIAnalyzer {
                     messages: [
                         {
                             role: "system",
-                            content: "Eres un analizador de contenido especializado en detectar ciberacoso y lenguaje ofensivo. Responde SOLO con un objeto JSON válido."
+                            content: "Eres un analizador de contenido especializado en detectar ciberacoso y lenguaje ofensivo, incluyendo variaciones ocultas. Responde SOLO con un objeto JSON válido."
                         },
                         {
                             role: "user",
@@ -35,16 +269,44 @@ class OpenAIAnalyzer {
                         }
                     ],
                     temperature: 0.3,
-                    max_tokens: 500
+                    max_tokens: 600
                 })
             });
 
             if (!response.ok) {
-                throw new Error(`Error de API: ${response.status} ${response.statusText}`);
+                throw new Error(`Error de API: ${response.status}`);
             }
 
             const data = await response.json();
-            return this.parseResponse(data.choices[0].message.content, originalMessage);
+            const result = await this.parseResponse(data.choices[0].message.content, message);
+            
+            // APRENDER nuevas palabras detectadas por GPT
+            if (result.newWordsToLearn && result.newWordsToLearn.length > 0) {
+                for (let newWord of result.newWordsToLearn) {
+                    await this.learnNewWord(
+                        newWord.word,
+                        'cyberbullying_variant',
+                        newWord.confidence / 100,
+                        newWord.maps_to
+                    );
+                }
+            }
+            
+            // Combinar con palabras detectadas localmente
+            if (localHiddenWords.length > 0 && !result.hiddenVariations) {
+                result.hiddenVariations = localHiddenWords.map(h => h.variation);
+            }
+            
+            // REGISTRAR detección en BD
+            await this.registerDetection({
+                originalText: message,
+                detectedWord: result.offensivePhrases?.join(', ') || 'ninguna',
+                category: result.classification,
+                confidence: result.confidence / 100,
+                wasHidden: (localHiddenWords.length > 0 || (result.hiddenVariations && result.hiddenVariations.length > 0))
+            });
+            
+            return result;
 
         } catch (error) {
             console.error('Error en análisis con OpenAI:', error);
@@ -52,50 +314,9 @@ class OpenAIAnalyzer {
         }
     }
 
-    createPrompt(message) {
-        return `
-Analiza el siguiente mensaje para detectar ciberacoso y lenguaje ofensivo. Responde EXCLUSIVAMENTE con un objeto JSON en este formato:
-
-{
-    "classification": "inofensivo|ofensivo_leve|ofensivo_grave|discurso_odio",
-    "detected_categories": ["lenguaje_sexual", "amenazas", "discriminatorio", "bullying", "racista"],
-    "explanation": "Explicación clara y educativa en español",
-    "offensive_phrases": ["frase1", "frase2"],
-    "suggestions": "Sugerencias para mejorar la comunicación",
-    "confidence_score": 85
-}
-
-Mensaje a analizar: "${message}"
-
-Reglas de clasificación:
-- "inofensivo": No contiene lenguaje ofensivo, saludos normales, conversación educada
-- "ofensivo_leve": Insultos leves, burlas suaves, lenguaje despectivo leve
-- "ofensivo_grave": Insultos graves, acoso claro, humillación constante, lenguaje muy ofensivo
-- "discurso_odio": Amenazas directas, discriminación grave, racismo, contenido violento explícito
-
-Categorías a detectar:
-- "lenguaje_sexual": Contenido sexual no deseado, acoso sexual explícito
-- "amenazas": Intimidación o daño potencial, chantaje, amenazas directas
-- "discriminatorio": Basado en género, raza, orientación sexual, religión, discapacidad, etc.
-- "bullying": Acoso escolar/digital, hostigamiento constante
-- "racista": Contenido racial ofensivo, xenofobia, comentarios étnicos ofensivos
-
-Para el confidence_score, asigna un valor entre 0-100 basado en la certeza de la clasificación:
-- 0-20: Completamente inofensivo, saludos normales
-- 21-40: Probablemente inofensivo, podría tener doble sentido muy leve
-- 41-60: Neutral/ambiguo, necesita más contexto
-- 61-75: Levemente ofensivo, insultos suaves
-- 76-85: Moderadamente ofensivo, lenguaje claramente inapropiado
-- 86-94: Fuertemente ofensivo, acoso claro
-- 95-100: Extremadamente ofensivo, discurso de odio o amenazas graves
-
-Responde SOLO con el objeto JSON, sin texto adicional.
-        `;
-    }
-
+    // ========== PARSEAR RESPUESTA CON APRENDIZAJE ==========
     parseResponse(responseText, originalMessage) {
         try {
-            // Limpiar la respuesta por si hay texto adicional
             const jsonMatch = responseText.match(/\{[\s\S]*\}/);
             if (!jsonMatch) {
                 throw new Error('Respuesta no válida de la API');
@@ -103,12 +324,12 @@ Responde SOLO con el objeto JSON, sin texto adicional.
 
             const result = JSON.parse(jsonMatch[0]);
             
-            // Validar la estructura de la respuesta
+            // Validar estructura
             if (!result.classification || !result.explanation) {
                 throw new Error('Respuesta de API incompleta');
             }
 
-            // Calcular confianza basada en la clasificación y contenido
+            // Calcular confianza dinámica
             const calculatedConfidence = this.calculateDynamicConfidence(result, originalMessage);
 
             return {
@@ -116,12 +337,14 @@ Responde SOLO con el objeto JSON, sin texto adicional.
                 explanation: result.explanation,
                 detected: result.detected_categories || [],
                 offensivePhrases: result.offensive_phrases || [],
+                hiddenVariations: result.hidden_variations || [],
+                newWordsToLearn: result.new_words_to_learn || [],
                 suggestions: result.suggestions || 'Considera comunicarte de manera más respetuosa.',
                 confidence: calculatedConfidence
             };
 
         } catch (error) {
-            console.error('Error parseando respuesta de OpenAI:', error);
+            console.error('Error parseando respuesta:', error);
             throw new Error('Error procesando la respuesta del análisis');
         }
     }
@@ -129,12 +352,11 @@ Responde SOLO con el objeto JSON, sin texto adicional.
     calculateDynamicConfidence(result, originalMessage) {
         let baseConfidence = result.confidence_score || 50;
         
-        // Ajustar confianza basada en la clasificación (rangos 0-100)
         const classificationBase = {
-            'inofensivo': 15,     // 0-30% para inofensivo
-            'ofensivo_leve': 65,  // 50-75% para ofensivo leve
-            'ofensivo_grave': 85, // 75-92% para ofensivo grave
-            'discurso_odio': 95   // 90-100% para discurso de odio
+            'inofensivo': 15,
+            'ofensivo_leve': 65,
+            'ofensivo_grave': 85,
+            'discurso_odio': 95
         };
 
         const classification = result.classification;
@@ -142,14 +364,19 @@ Responde SOLO con el objeto JSON, sin texto adicional.
             baseConfidence = classificationBase[classification];
         }
 
-        // Ajustar por número de categorías detectadas
+        // Ajustar por variaciones ocultas detectadas
+        if (result.hidden_variations && result.hidden_variations.length > 0) {
+            baseConfidence += (result.hidden_variations.length * 8);
+        }
+
+        // Ajustar por palabras ofensivas
         const categoryCount = result.detected_categories ? result.detected_categories.length : 0;
         if (categoryCount > 0) {
             baseConfidence += (categoryCount * 3);
         }
 
-        // Ajustar por palabras clave de alta severidad
-        const highSeverityWords = ['matar', 'muerte', 'suicidio', 'violar', 'amenaza', 'odio', 'asco'];
+        // Palabras de alta severidad
+        const highSeverityWords = ['matar', 'muerte', 'suicidio', 'violar', 'amenaza'];
         const hasHighSeverity = highSeverityWords.some(word => 
             originalMessage.toLowerCase().includes(word)
         );
@@ -157,26 +384,7 @@ Responde SOLO con el objeto JSON, sin texto adicional.
             baseConfidence += 8;
         }
 
-        // Ajustar por palabras clave de mediana severidad
-        const mediumSeverityWords = ['idiota', 'estúpido', 'inútil', 'feo', 'gordo', 'raro'];
-        const hasMediumSeverity = mediumSeverityWords.some(word => 
-            originalMessage.toLowerCase().includes(word)
-        );
-        if (hasMediumSeverity && classification !== 'inofensivo') {
-            baseConfidence += 5;
-        }
-
-        // Ajustar por longitud del mensaje (mensajes más largos dan más contexto)
-        const messageLength = originalMessage.length;
-        if (messageLength > 50 && classification !== 'inofensivo') {
-            baseConfidence += 2;
-        }
-
-        // Variación aleatoria pequeña para hacerlo más natural (±3%)
-        const randomVariation = (Math.random() * 6) - 3;
-        baseConfidence += randomVariation;
-
-        // Asegurar que esté en rango 0-100
+        // Limitar y redondear
         return Math.min(100, Math.max(0, Math.round(baseConfidence)));
     }
 
@@ -191,13 +399,17 @@ Responde SOLO con el objeto JSON, sin texto adicional.
     }
 }
 
-// Instancia global del analizador
+// ========== INSTANCIA GLOBAL ==========
 let openAIAnalyzer = null;
 
-// Función para inicializar la API - SIN PARÁMETROS
-function initializeOpenAI() {
+// Función para inicializar la API
+async function initializeOpenAI() {
     openAIAnalyzer = new OpenAIAnalyzer();
-    console.log('✅ OpenAI API inicializada para pruebas');
+    
+    // Cargar palabras aprendidas desde la BD
+    await openAIAnalyzer.loadLearnedWords();
+    
+    console.log('✅ OpenAI API inicializada con sistema de aprendizaje automático');
     return true;
 }
 
@@ -209,7 +421,23 @@ async function analyzeWithOpenAI(message) {
     return await openAIAnalyzer.analyzeMessage(message);
 }
 
-// Manejo de errores específicos de OpenAI
+// Función para aprender manualmente una palabra
+async function learnWordManually(word, category, mapsTo = null) {
+    if (openAIAnalyzer) {
+        return await openAIAnalyzer.learnNewWord(word, category, 0.9, mapsTo);
+    }
+    return null;
+}
+
+// Función para obtener palabras aprendidas
+function getLearnedWords() {
+    if (openAIAnalyzer) {
+        return Array.from(openAIAnalyzer.learnedWordsCache.values());
+    }
+    return [];
+}
+
+// Manejo de errores
 function handleOpenAIError(error) {
     if (error.message.includes('401')) {
         return 'API key inválida. Verifica tu clave de OpenAI.';
@@ -217,8 +445,6 @@ function handleOpenAIError(error) {
         return 'Límite de solicitudes excedido. Intenta más tarde.';
     } else if (error.message.includes('500')) {
         return 'Error del servidor de OpenAI. Intenta nuevamente.';
-    } else if (error.message.includes('network')) {
-        return 'Error de conexión. Verifica tu internet.';
     } else {
         return 'Error en el análisis. Intenta nuevamente.';
     }

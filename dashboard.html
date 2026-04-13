@@ -6,6 +6,7 @@
     <title>Dashboard - Cuidemos Nuestras Palabras</title>
     <link rel="stylesheet" href="styles/styles.css">
     <link rel="stylesheet" href="styles/dashboard.css">
+    <link rel="stylesheet" href="styles/statistics.css">
 </head>
 <body>
     <nav class="navbar">
@@ -54,6 +55,41 @@
                 </div>
             </div>
 
+            <!-- NUEVA SECCIÓN DE ESTADÍSTICAS -->
+            <div class="statistics-section">
+                <h2>📊 Estadísticas del Sistema</h2>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h3>Palabras Aprendidas</h3>
+                        <p id="totalLearnedWords">0</p>
+                        <small>Total en base de datos</small>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Alertas Detectadas</h3>
+                        <p id="totalDetections">0</p>
+                        <small>Mensajes analizados</small>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Precisión del Modelo</h3>
+                        <p id="avgConfidence">0%</p>
+                        <small>Promedio de confianza</small>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <h3>📈 Actividad Semanal</h3>
+                    <canvas id="weeklyChart" width="400" height="200" style="width:100%; max-width:400px; height:auto;"></canvas>
+                </div>
+
+                <div class="top-words-container">
+                    <h3>🔝 Palabras Más Detectadas</h3>
+                    <ul id="topWordsList" class="top-words-list">
+                        <li>Cargando...</li>
+                    </ul>
+                </div>
+            </div>
+
             <div class="tips-section">
                 <h4>💡 Consejos para una comunicación respetuosa:</h4>
                 <ul>
@@ -68,5 +104,6 @@
 
     <script src="scripts/auth.js"></script>
     <script src="scripts/dashboard.js"></script>
+    <script src="scripts/statistics.js"></script>
 </body>
 </html>
