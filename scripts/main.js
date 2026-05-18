@@ -1,45 +1,74 @@
 // Modificar el DOMContentLoaded existente
-document.addEventListener('DOMContentLoaded', async function() {
-    // Cargar estadísticas al iniciar
-    await loadStatistics();
-    await loadWeeklyStats();
-    await loadTopWords();
-    
-    // Inicializar OpenAI
-    initializeOpenAI();
-    
-    // Inicializar analizador
+document.addEventListener('DOMContentLoaded', function() {
+    // Inicializar analizador inmediatamente (no bloquear por llamadas de red)
     initializeAnalyzer();
     setupEventListeners();
-    
-    console.log('✅ Sistema listo - Las estadísticas se actualizarán automáticamente');
-});     
+
+    // Inicializar OpenAI en segundo plano (opcional)
+    initializeOpenAI().catch(() => {});
+
+    // Cargar estadísticas en segundo plano
+    loadStatistics();
+    loadWeeklyStats();
+    loadTopWords();
+    loadLearningProgress();
+
+    // Mantener estadísticas del index sincronizadas con el sistema real
+    setInterval(() => {
+        loadStatistics();
+        loadWeeklyStats();
+        loadTopWords();
+    }, 10000);
+
+    console.log('✅ Sistema listo - Analizador activo');
+});
 // scripts/main.js - AGREGAR ESTAS FUNCIONES AL INICIO
 
 // ========== CONFIGURACIÓN API ==========
-const API_URL = 'http://localhost:3000/api';
+const MAIN_API_URL = 'http://localhost:3000/api';
 
 // ========== FUNCIONES DE ESTADÍSTICAS ==========
 
 // Cargar estadísticas desde la BD
 async function loadStatistics() {
     try {
-        const response = await fetch(`${API_URL}/statistics`);
+        const response = await fetch(`${MAIN_API_URL}/statistics`);
         if (!response.ok) throw new Error('Error cargando estadísticas');
         const stats = await response.json();
-        
-        // Actualizar números
+
+        // Actualizar palabras aprendidas
         const learnedWordsEl = document.getElementById('totalLearnedWords');
-        const detectionsEl = document.getElementById('totalDetections');
-        const avgConfidenceEl = document.getElementById('avgConfidence');
-        
         if (learnedWordsEl) learnedWordsEl.textContent = stats.totalLearnedWords || 0;
+
+        // Actualizar palabras pendientes
+        const pendingEl = document.getElementById('pendingWords');
+        if (pendingEl) pendingEl.textContent = stats.pendingWords || 0;
+
+        // Actualizar palabras aprobadas
+        const approvedEl = document.getElementById('approvedWords');
+        if (approvedEl) approvedEl.textContent = stats.approvedWords || 0;
+
+        // Actualizar palabras rechazadas
+        const rejectedEl = document.getElementById('rejectedWords');
+        if (rejectedEl) rejectedEl.textContent = stats.rejectedWords || 0;
+
+        // Actualizar detecciones totales
+        const detectionsEl = document.getElementById('totalDetections');
         if (detectionsEl) detectionsEl.textContent = stats.totalDetections || 0;
-        
-        // Calcular confianza promedio
-        const avgConfidence = stats.avgConfidence ? Math.round(stats.avgConfidence * 100) : 85;
+
+        // Actualizar detecciones de hoy
+        const todayEl = document.getElementById('todayDetections');
+        if (todayEl) todayEl.textContent = stats.todayDetections || 0;
+
+        // Actualizar detecciones ofensivas
+        const offensiveEl = document.getElementById('offensiveDetections');
+        if (offensiveEl) offensiveEl.textContent = stats.offensiveDetections || 0;
+
+        // Actualizar confianza promedio
+        const avgConfidenceEl = document.getElementById('avgConfidence');
+        const avgConfidence = stats.avgConfidence ? Math.round(stats.avgConfidence * 100) : 0;
         if (avgConfidenceEl) avgConfidenceEl.textContent = `${avgConfidence}%`;
-        
+
         return stats;
     } catch (error) {
         console.log('Servidor no disponible, usando modo offline');
@@ -50,7 +79,7 @@ async function loadStatistics() {
 // Cargar estadísticas semanales
 async function loadWeeklyStats() {
     try {
-        const response = await fetch(`${API_URL}/weekly-stats`);
+        const response = await fetch(`${MAIN_API_URL}/weekly-stats`);
         if (!response.ok) throw new Error('Error cargando stats semanales');
         const stats = await response.json();
         drawWeeklyChart(stats);
@@ -60,6 +89,151 @@ async function loadWeeklyStats() {
         showChartEmpty();
         return [];
     }
+}
+
+// ========== GRÁFICO DE PROGRESO DEL APRENDIZAJE ==========
+async function loadLearningProgress() {
+    try {
+        const response = await fetch(`${MAIN_API_URL}/learning-progress`);
+        const progress = await response.json();
+        drawLearningProgressChart(progress);
+
+        const summaryResponse = await fetch(`${MAIN_API_URL}/learning-summary`);
+        const summary = await summaryResponse.json();
+        displayLearningSummary(summary);
+
+        return { progress, summary };
+    } catch (error) {
+        console.log('No se pudo cargar progreso del aprendizaje');
+        return null;
+    }
+}
+
+function drawLearningProgressChart(data) {
+    const canvas = document.getElementById('learningProgressChart');
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    const container = canvas.parentElement;
+
+    canvas.width = Math.min(600, container.clientWidth - 40);
+    canvas.height = 250;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    if (!data || data.length === 0) {
+        ctx.fillStyle = '#718096';
+        ctx.font = '14px Arial';
+        ctx.fillText('No hay datos de progreso aún', 20, 30);
+        ctx.fillText('El gráfico mostrará el progreso cuando se aprueben o rechacen palabras', 20, 50);
+        return;
+    }
+
+    const padding = 50;
+    const chartWidth = canvas.width - padding * 2;
+    const chartHeight = canvas.height - padding * 2;
+
+    const dates = data.map(d => {
+        const date = new Date(d.date);
+        return `${date.getDate()}/${date.getMonth() + 1}`;
+    });
+
+    const approved = data.map(d => d.approved || 0);
+    const rejected = data.map(d => d.rejected || 0);
+    const pending = data.map(d => d.pending || 0);
+
+    const maxValue = Math.max(...approved, ...rejected, ...pending, 1);
+    const barWidth = chartWidth / dates.length - 10;
+
+    // Dibujar leyenda
+    ctx.font = '12px Arial';
+    ctx.fillStyle = '#48bb78';
+    ctx.fillRect(padding, 10, 12, 12);
+    ctx.fillText('Aprobadas', padding + 18, 20);
+
+    ctx.fillStyle = '#ef4444';
+    ctx.fillRect(padding + 100, 10, 12, 12);
+    ctx.fillText('Rechazadas', padding + 118, 20);
+
+    ctx.fillStyle = '#f59e0b';
+    ctx.fillRect(padding + 210, 10, 12, 12);
+    ctx.fillText('Pendientes', padding + 228, 20);
+
+    // Dibujar barras
+    for (let i = 0; i < dates.length; i++) {
+        const x = padding + i * (barWidth + 10);
+
+        // Barra aprobada (verde)
+        const approvedHeight = (approved[i] / maxValue) * chartHeight;
+        if (approvedHeight > 0) {
+            ctx.fillStyle = '#48bb78';
+            ctx.fillRect(x, canvas.height - padding - approvedHeight, barWidth, approvedHeight);
+        }
+
+        // Barra rechazada (rojo) - apilada encima
+        const rejectedHeight = (rejected[i] / maxValue) * chartHeight;
+        if (rejectedHeight > 0) {
+            ctx.fillStyle = '#ef4444';
+            ctx.fillRect(x, canvas.height - padding - approvedHeight - rejectedHeight, barWidth, rejectedHeight);
+        }
+
+        // Barra pendiente (amarillo) - apilada encima
+        const pendingHeight = (pending[i] / maxValue) * chartHeight;
+        if (pendingHeight > 0) {
+            ctx.fillStyle = '#f59e0b';
+            ctx.fillRect(x, canvas.height - padding - approvedHeight - rejectedHeight - pendingHeight, barWidth, pendingHeight);
+        }
+
+        // Etiqueta
+        ctx.fillStyle = '#666';
+        ctx.font = '10px Arial';
+        ctx.fillText(dates[i], x + barWidth / 2 - 10, canvas.height - padding + 15);
+    }
+
+    // Ejes
+    ctx.strokeStyle = '#ccc';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(padding, padding);
+    ctx.lineTo(padding, canvas.height - padding);
+    ctx.lineTo(canvas.width - padding, canvas.height - padding);
+    ctx.stroke();
+}
+
+function displayLearningSummary(summary) {
+    const container = document.getElementById('learningSummary');
+    if (!container) return;
+
+    let html = `
+        <div class="learning-summary-item">
+            <h4>Total Aprendidas</h4>
+            <p>${summary.totalLearned || 0}</p>
+        </div>
+        <div class="learning-summary-item">
+            <h4>Veces Detectadas</h4>
+            <p>${summary.totalDetections || 0}</p>
+        </div>
+    `;
+
+    if (summary.topCategories && summary.topCategories.length > 0) {
+        html += `
+            <div class="learning-summary-item">
+                <h4>Categoría Principal</h4>
+                <p class="category">${summary.topCategories[0].category}</p>
+            </div>
+        `;
+    }
+
+    if (summary.topLearnedWords && summary.topLearnedWords.length > 0) {
+        html += `
+            <div class="learning-summary-item">
+                <h4>Más Usada</h4>
+                <p class="category">"${summary.topLearnedWords[0].word}"</p>
+            </div>
+        `;
+    }
+
+    container.innerHTML = html;
 }
 
 // Dibujar gráfico semanal
@@ -144,7 +318,7 @@ function hideChartEmpty() {
 // Cargar top palabras
 async function loadTopWords() {
     try {
-        const response = await fetch(`${API_URL}/top-words`);
+        const response = await fetch(`${MAIN_API_URL}/top-words`);
         if (!response.ok) throw new Error('Error cargando top palabras');
         const words = await response.json();
         displayTopWords(words);
@@ -184,7 +358,7 @@ function displayTopWords(words) {
 // ========== FUNCIÓN PARA REGISTRAR DETECCIONES ==========
 async function registerDetection(detectionData) {
     try {
-        const response = await fetch(`${API_URL}/register-detection`, {
+        const response = await fetch(`${MAIN_API_URL}/register-detection`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(detectionData)
@@ -213,12 +387,31 @@ function decodeLeetSpeak(text) {
         '7': 't', '8': 'b', '@': 'a', '$': 's', '!': 'i',
         '|': 'l', 'ph': 'f', 'ck': 'k'
     };
-    
+
     let decoded = text.toLowerCase();
     for (let [leet, letter] of Object.entries(leetMap)) {
         decoded = decoded.replace(new RegExp(leet, 'g'), letter);
     }
     return decoded;
+}
+
+// ========== GUARDAR PALABRA COMO PENDIENTE (APRENDIZAJE SUPERVISADO) ==========
+async function saveWordAsPendingFallback(word, mapsTo, confidence) {
+    try {
+        await fetch(`${MAIN_API_URL}/pending`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                word: word.toLowerCase(),
+                category: 'cyberbullying_variant',
+                confidence: confidence,
+                mapsTo: mapsTo,
+                detectedText: 'detectado en análisis'
+            })
+        });
+    } catch (error) {
+        console.log('No se pudo guardar palabra pendiente (servidor no disponible)');
+    }
 }
 
 // Contador de caracteres
@@ -272,113 +465,65 @@ document.querySelectorAll('.feature-card, .analyzer-container').forEach(el => {
 
 // ✅ FUNCIÓN MEJORADA DEL ANALIZADOR CON RESET A 0%
 function initializeAnalyzer() {
+    // Si index-analyzer.js está activo, evitamos doble binding de eventos
+    if (window.__INDEX_ANALYZER_ACTIVE__) {
+        return;
+    }
+
     const analyzeBtn = document.getElementById('analyzeBtn');
     const clearBtn = document.getElementById('clearBtn');
-    const messageInput = document.getElementById('messageInput');
+    const inputEl = document.getElementById('messageInput');
     const resultsContainer = document.getElementById('resultsContainer');
     const welcomeMessage = document.getElementById('welcomeMessage');
     const confidenceText = document.getElementById('confidenceText');
-    
-    if (!analyzeBtn) return;
 
-    // ✅ FUNCIÓN PARA LIMPIAR Y RESETEAR TODO
-    function resetAnalyzer() {
-        messageInput.value = '';
-        if (charCount) charCount.textContent = '0';
-        
-        // Resetear el porcentaje de confianza a 0%
-        if (confidenceText) {
-            confidenceText.textContent = '0%';
-        }
-        
-        // Resetear el color de la badge
-        const confidenceBadge = document.getElementById('confidenceBadge');
-        if (confidenceBadge) {
-            confidenceBadge.style.background = '#10b981'; // Verde para 0%
-        }
-        
-        // Ocultar resultados y mostrar mensaje de bienvenida
-        resultsContainer.classList.add('hidden');
-        welcomeMessage.classList.remove('hidden');
-        
-        messageInput.focus();
+    if (!analyzeBtn || !inputEl || !resultsContainer || !welcomeMessage) {
+        console.error('❌ Analyzer UI incompleta: faltan elementos del DOM');
+        return;
     }
 
-    analyzeBtn.addEventListener('click', async function() {
-        const message = messageInput.value.trim();
-        
+    const resetAnalyzer = () => {
+        inputEl.value = '';
+        if (typeof charCount !== 'undefined' && charCount) charCount.textContent = '0';
+        if (confidenceText) confidenceText.textContent = '0%';
+        resultsContainer.classList.add('hidden');
+        welcomeMessage.classList.remove('hidden');
+        inputEl.focus();
+    };
+
+    const runAnalysis = async () => {
+        const message = inputEl.value.trim();
         if (!message) {
             showNotification('Por favor, ingresa un mensaje para analizar', 'warning');
-            
-            // ✅ ACTUALIZAR A 0% CUANDO NO HAY MENSAJE
-            if (confidenceText) {
-                confidenceText.textContent = '0%';
-            }
-            const confidenceBadge = document.getElementById('confidenceBadge');
-            if (confidenceBadge) {
-                confidenceBadge.style.background = '#10b981'; // Verde para 0%
-            }
             return;
         }
 
-        // Mostrar loading
         analyzeBtn.disabled = true;
         analyzeBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analizando...';
 
         try {
-            // ✅ USAR LA API REAL DE OPENAI
-            const result = await analyzeWithOpenAI(message);
-            
-            // Actualizar UI con resultados reales
+            const result = await analyzeMessageSimulated(message);
             updateResultsUI(result);
-            
-            // Mostrar resultados
             welcomeMessage.classList.add('hidden');
             resultsContainer.classList.remove('hidden');
-            
-            showNotification('Análisis completado con IA', 'success');
-            
         } catch (error) {
-            console.error('Error en análisis con OpenAI:', error);
-            
-            // Fallback al análisis simulado si la API falla
-            showNotification('Usando análisis local...', 'warning');
-            const fallbackResult = await analyzeMessageSimulated(message);
-            updateResultsUI(fallbackResult);
-            welcomeMessage.classList.add('hidden');
-            resultsContainer.classList.remove('hidden');
-            
+            console.error('Error en análisis:', error);
+            showNotification('Error al analizar el mensaje', 'error');
         } finally {
             analyzeBtn.disabled = false;
             analyzeBtn.innerHTML = '<i class="fas fa-search"></i> Analizar Mensaje';
         }
-    });
-    
-    // ✅ USAR LA NUEVA FUNCIÓN RESET EN EL BOTÓN LIMPIAR
-    clearBtn.addEventListener('click', resetAnalyzer);
+    };
 
-    // ✅ DETECTAR CUANDO SE ELIMINA TODO EL TEXTO MANUALMENTE
-    messageInput.addEventListener('input', function() {
-        // Actualizar contador de caracteres
-        if (charCount) {
+    analyzeBtn.onclick = runAnalysis;
+
+    if (clearBtn) {
+        clearBtn.onclick = resetAnalyzer;
+    }
+
+    inputEl.addEventListener('input', function() {
+        if (typeof charCount !== 'undefined' && charCount) {
             charCount.textContent = this.value.length;
-        }
-        
-        // ✅ SI EL TEXTO ESTÁ VACÍO, RESETEAR A 0%
-        if (this.value.trim().length === 0) {
-            if (confidenceText) {
-                confidenceText.textContent = '0%';
-            }
-            const confidenceBadge = document.getElementById('confidenceBadge');
-            if (confidenceBadge) {
-                confidenceBadge.style.background = '#10b981'; // Verde para 0%
-            }
-            
-            // También ocultar resultados si están visibles
-            if (!resultsContainer.classList.contains('hidden')) {
-                resultsContainer.classList.add('hidden');
-                welcomeMessage.classList.remove('hidden');
-            }
         }
     });
 }
@@ -413,11 +558,13 @@ async function analyzeMessageSimulated(message) {
             
             // Detectar palabras ocultas (Leet Speak)
             let hiddenWordsFound = [];
-            for (let word of words) {
+            for (const word of words) {
                 const cleanWord = word.replace(/[.,!?;:()]/g, '');
+                if (cleanWord.length < 2) continue;
+
                 const decoded = decodeLeetSpeak(cleanWord);
-                
-                for (let offensive of offensiveWords) {
+
+                for (const offensive of offensiveWords) {
                     if (decoded === offensive || (decoded.includes(offensive) && decoded.length > 3)) {
                         hiddenWordsFound.push({
                             original: cleanWord,
@@ -425,37 +572,43 @@ async function analyzeMessageSimulated(message) {
                             mapsTo: offensive
                         });
                         detected.push(`Palabra oculta: "${cleanWord}" → significa "${offensive}"`);
+                        // Guardar como pendiente
+                        try { await saveWordAsPendingFallback(cleanWord, offensive, 0.8); } catch(e) {}
                         break;
                     }
                 }
             }
             
-            // Detectar palabras ofensivas normales
-            offensiveWords.forEach(word => {
+// Detectar palabras ofensivas normales
+            for (const word of offensiveWords) {
                 if (lowerMessage.includes(word)) {
                     if (!detected.some(d => d.includes(word))) {
                         detected.push(`Insulto: "${word}"`);
+                        // Guardar como pendiente
+                        try { await saveWordAsPendingFallback(word, word, 0.9); } catch(e) {}
                     }
                 }
-            });
-            
+            }
+
             // Detectar discurso de odio
-            hateWords.forEach(word => {
+            for (const word of hateWords) {
                 if (lowerMessage.includes(word)) {
                     if (!detected.some(d => d.includes(word))) {
                         detected.push(`Discurso de odio: "${word}"`);
+                        try { await saveWordAsPendingFallback(word, 'discurso_odio', 0.95); } catch(e) {}
                     }
                 }
-            });
-            
+            }
+
             // Detectar amenazas
-            threatWords.forEach(word => {
+            for (const word of threatWords) {
                 if (lowerMessage.includes(word)) {
                     if (!detected.some(d => d.includes(word))) {
                         detected.push(`Amenaza: "${word}"`);
+                        try { await saveWordAsPendingFallback(word, 'amenaza', 0.95); } catch(e) {}
                     }
                 }
-            });
+            }
             
             // Determinar clasificación y confianza
             const hasThreat = detected.some(item => item.includes('Amenaza'));

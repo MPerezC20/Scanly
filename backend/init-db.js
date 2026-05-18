@@ -21,7 +21,22 @@ db.serialize(() => {
     )
   `);
 
-  // 2. Tabla de detecciones (registro de cada análisis)
+  // 2. Tabla de palabras pendientes (APRENDIZAJE SUPERVISADO)
+  db.run(`
+    CREATE TABLE IF NOT EXISTS pending_words (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      word TEXT NOT NULL,
+      category TEXT,
+      confidence REAL,
+      maps_to TEXT,
+      detected_text TEXT,
+      source TEXT DEFAULT 'system',
+      status TEXT DEFAULT 'pending',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  // 3. Tabla de detecciones (registro de cada análisis)
   db.run(`
     CREATE TABLE IF NOT EXISTS detections (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -36,7 +51,7 @@ db.serialize(() => {
     )
   `);
 
-  // 3. Tabla de estadísticas diarias
+  // 4. Tabla de estadísticas diarias
   db.run(`
     CREATE TABLE IF NOT EXISTS daily_stats (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -47,7 +62,7 @@ db.serialize(() => {
     )
   `);
 
-  // 4. Tabla de usuarios (si quieres tracking por usuario)
+  // 5. Tabla de usuarios (si quieres tracking por usuario)
   db.run(`
     CREATE TABLE IF NOT EXISTS users (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -59,7 +74,7 @@ db.serialize(() => {
 
   console.log('✅ Base de datos creada exitosamente');
   console.log('📁 Ubicación: /database/cyberbullying.db');
-  console.log('📋 Tablas creadas: learned_words, detections, daily_stats, users');
+  console.log('📋 Tablas creadas: learned_words, pending_words, detections, daily_stats, users');
 });
 
 // Insertar datos de ejemplo (palabras iniciales de cyberbullying)

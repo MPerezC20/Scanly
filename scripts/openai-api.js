@@ -117,36 +117,36 @@ class OpenAIAnalyzer {
         return matrix[b.length][a.length];
     }
 
-    // ========== APRENDER NUEVA PALABRA EN BD ==========
-    async learnNewWord(word, category, confidence, mapsTo = null) {
+    // ========== GUARDAR PALABRA COMO PENDIENTE (APRENDIZAJE SUPERVISADO) ==========
+    async savePendingWord(word, category, confidence, mapsTo = null, detectedText = null) {
         try {
-            const response = await fetch(`${API_URL}/learn`, {
+            const response = await fetch(`${API_URL}/pending`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     word: word.toLowerCase(),
                     category: category,
                     confidence: confidence,
-                    mapsTo: mapsTo
+                    mapsTo: mapsTo,
+                    detectedText: detectedText
                 })
             });
             
             if (response.ok) {
                 const data = await response.json();
-                // Actualizar caché
-                this.learnedWordsCache.set(word.toLowerCase(), {
-                    word: word.toLowerCase(),
-                    category: category,
-                    confidence: confidence,
-                    maps_to: mapsTo
-                });
-                console.log(`🧠 IA aprendió nueva palabra: "${word}" → ${mapsTo || category}`);
+                console.log(`📝 Palabra "${word}" guardada para revisión supervisión: "${mapsTo || category}"`);
                 return data;
             }
         } catch (error) {
-            console.log('No se pudo aprender palabra (servidor no disponible)');
+            console.log('No se pudo guardar palabra pendiente (servidor no disponible)');
         }
         return null;
+    }
+
+    // ========== APRENDER NUEVA PALABRA EN BD (Solo aprobación manual) ==========
+    async learnNewWord(word, category, confidence, mapsTo = null) {
+        // Guardar como pendiente para supervisión humana
+        return await this.savePendingWord(word, category, confidence, mapsTo);
     }
 
     // ========== REGISTRAR DETECCIÓN EN BD ==========

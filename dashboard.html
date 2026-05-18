@@ -55,49 +55,180 @@
                 </div>
             </div>
 
-            <!-- NUEVA SECCIÓN DE ESTADÍSTICAS -->
-            <div class="statistics-section">
+            <!-- ESTADÍSTICAS DE APRENDIZAJE SUPERVISADO -->
+            <div id="adminStatsSection" class="statistics-section">
                 <h2>📊 Estadísticas del Sistema</h2>
-                
+
+                <!-- Estadísticas simplificadas -->
                 <div class="stats-grid">
                     <div class="stat-card">
-                        <h3>Palabras Aprendidas</h3>
+                        <h3>📚 Aprendidas</h3>
                         <p id="totalLearnedWords">0</p>
-                        <small>Total en base de datos</small>
                     </div>
                     <div class="stat-card">
-                        <h3>Alertas Detectadas</h3>
+                        <h3>⏳ Pendientes</h3>
+                        <p id="pendingWords">0</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>🔍 Analizados</h3>
                         <p id="totalDetections">0</p>
-                        <small>Mensajes analizados</small>
                     </div>
                     <div class="stat-card">
-                        <h3>Precisión del Modelo</h3>
+                        <h3>📊 Confianza</h3>
                         <p id="avgConfidence">0%</p>
-                        <small>Promedio de confianza</small>
+                    </div>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h3>🧠 Pendientes (Usuario)</h3>
+                        <p id="userInputPending">0</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>✅ Aprobadas (Usuario)</h3>
+                        <p id="userInputApproved">0</p>
                     </div>
                 </div>
 
                 <div class="chart-container">
-                    <h3>📈 Actividad Semanal</h3>
-                    <canvas id="weeklyChart" width="400" height="200" style="width:100%; max-width:400px; height:auto;"></canvas>
+                    <h3>📈 Progreso Semanal</h3>
+                    <canvas id="weeklyChart" width="400" height="150" style="width:100%; max-width:400px; height:150px;"></canvas>
+                </div>
+
+                <div class="chart-container">
+                    <h3>📉 Curva de Aprendizaje Supervisado</h3>
+                    <canvas id="learningCurveChart" width="500" height="180" style="width:100%; max-width:500px; height:180px;"></canvas>
                 </div>
 
                 <div class="top-words-container">
-                    <h3>🔝 Palabras Más Detectadas</h3>
-                    <ul id="topWordsList" class="top-words-list">
-                        <li>Cargando...</li>
-                    </ul>
+                    <h3>🧾 Palabras Aprendidas</h3>
+                    <div id="learnedWordsContainer" class="pending-words-container">
+                        <p class="loading-text">Cargando palabras aprendidas...</p>
+                    </div>
                 </div>
             </div>
 
-            <div class="tips-section">
-                <h4>💡 Consejos para una comunicación respetuosa:</h4>
-                <ul>
-                    <li>Piensa antes de escribir: ¿Cómo te sentirías si recibieras este mensaje?</li>
-                    <li>Evita lenguaje ofensivo, insultos o burlas</li>
-                    <li>Respeta las diferencias y opiniones de los demás</li>
-                    <li>Si ves acoso, reporta y ofrece apoyo</li>
-                </ul>
+            <!-- SECCIÓN DE HISTORIAL (visible para todos) -->
+            <div id="historySection" class="history-section">
+                <h2>📋 Mi Historial de Análisis</h2>
+                <p>Aquí puedes ver las frases que has analizado anteriormente</p>
+
+                <div id="historyContainer" class="history-container">
+                    <p class="loading-text">Cargando historial...</p>
+                </div>
+            </div>
+
+            <!-- SECCIÓN DE RECOMENDACIONES (visible para todos) -->
+            <div id="recommendationsSection" class="recommendations-section">
+                <h2>💪 Recomendaciones para Afrontar el Ciberacoso</h2>
+
+                <div class="recommendations-grid">
+                    <div class="recommendation-card">
+                        <div class="rec-icon">🛡️</div>
+                        <h3>No Respondas</h3>
+                        <p>No respondas a mensajes ofensivos. Esto suele empeorar la situación. Bloquea al agresor si es necesario.</p>
+                    </div>
+
+                    <div class="recommendation-card">
+                        <div class="rec-icon">📸</div>
+                        <h3>Guarda Evidencia</h3>
+                        <p>Toma capturas de pantalla de los mensajes ofensivos. Esto te servirá si decides reportar.</p>
+                    </div>
+
+                    <div class="recommendation-card">
+                        <div class="rec-icon">👨‍👩‍👧</div>
+                        <h3>Habla con un Adulto</h3>
+                        <p>Cuéntale a tus padres, profesores o un adulto de confianza. No estás solo/a y ellos pueden ayudarte.</p>
+                    </div>
+
+                    <div class="recommendation-card">
+                        <div class="rec-icon">🔔</div>
+                        <h3>Reporta la Situación</h3>
+                        <p>Utiliza las herramientas de reporte de la plataforma donde ocurre el acoso. La mayoría tiene políticas contra esto.</p>
+                    </div>
+
+                    <div class="recommendation-card">
+                        <div class="rec-icon">💬</div>
+                        <h3>Busca Apoyo</h3>
+                        <p>Habla con amigos o personas de confianza. El apoyo emocional es muy importante para sobrepasar esto.</p>
+                    </div>
+
+                    <div class="recommendation-card">
+                        <div class="rec-icon">🧘</div>
+                        <h3>Cuida tu Salud Mental</h3>
+                        <p>Haz actividades que te gusten, descansa y come bien. Tu bienestar es lo más importante.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECCIÓN DE RECURSOS DE AYUDA (visible para todos) -->
+            <div id="resourcesSection" class="resources-section">
+                <h2>🔗 Recursos de Ayuda</h2>
+                <p>Líneas de ayuda y organizaciones que pueden apoyarte</p>
+
+                <div class="resources-grid">
+                    <div class="resource-card">
+                        <h3><i class="fas fa-phone"></i> Líneas de Ayuda</h3>
+                        <ul>
+                            <li><strong> Línea Nacional de Prevención del Suicidio:</strong> 188 (24/7)</li>
+                            <li><strong> Defensoría del Niño y Adolescente:</strong> 100</li>
+                            <li><strong> police Cybercrime:</strong> denuncialo@cyber.gob</li>
+                        </ul>
+                    </div>
+
+                    <div class="resource-card">
+                        <h3><i class="fas fa-globe"></i> Recursos Online</h3>
+                        <ul>
+                            <li><a href="https://www.choca.org" target="_blank">CHOC - Centro de Ayuda</a></li>
+                            <li><a href="https://www.linea123.gob.mx" target="_blank">Línea 123</a></li>
+                            <li><a href="https://www.unicef.org/es/proteccion" target="_blank">UNICEF Protección</a></li>
+                        </ul>
+                    </div>
+
+                    <div class="resource-card">
+                        <h3><i class="fas fa-book"></i> Aprende Más</h3>
+                        <ul>
+                            <li>Cómo proteger tu privacidad online</li>
+                            <li>Qué hacer si te bullyng</li>
+                            <li>Cómo ser un aliado contra el acoso</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="emergency-box">
+                    <h3>🆘 ¿En situación de emergencia?</h3>
+                    <p>Si sientes que estás en peligro o tienes pensamientos de hacerte daño, busca ayuda inmediata:</p>
+                    <p><strong>Llama al 911 o ve a tu sala de emergencias más cercana</strong></p>
+                </div>
+            </div>
+
+            <!-- SECCIÓN DE APRENDIZAJE SUPERVISADO (solo admin) -->
+            <div class="supervision-section">
+                <h2>🧠 Supervisión de Aprendizaje</h2>
+                <p>Aquí puedes aprobar o rechazar las palabras detectadas por el sistema que requieren revisión humana.</p>
+                <div class="supervision-actions" style="margin-bottom:12px; display:flex; gap:8px; flex-wrap:wrap;">
+                    <button id="refreshPendingBtn" class="approve-btn" type="button">🔄 Actualizar pendientes</button>
+                </div>
+
+                <div class="manual-pending-box" style="margin-bottom:14px; background:#f7fafc; border:1px solid #e2e8f0; border-radius:10px; padding:10px;">
+                    <strong>Agregar palabra de prueba</strong>
+                    <div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;">
+                        <input id="manualWordInput" type="text" placeholder="palabra" style="padding:8px; border:1px solid #cbd5e0; border-radius:8px;" />
+                        <select id="manualCategoryInput" style="padding:8px; border:1px solid #cbd5e0; border-radius:8px;">
+                            <option value="cyberbullying_variant">Cyberacoso (variante)</option>
+                            <option value="insulto">Insulto</option>
+                            <option value="discurso_odio">Discurso de odio</option>
+                            <option value="amenaza">Amenaza</option>
+                            <option value="inofensivo">No cyberacoso</option>
+                        </select>
+                        <input id="manualMapsToInput" type="text" placeholder="maps_to (opcional)" style="padding:8px; border:1px solid #cbd5e0; border-radius:8px;" />
+                        <button id="addManualPendingBtn" class="approve-btn" type="button">➕ Enviar a revisión</button>
+                    </div>
+                </div>
+                
+                <div id="pendingWordsContainer" class="pending-words-container">
+                    <p class="loading-text">Cargando palabras pendientes...</p>
+                </div>
             </div>
         </div>
     </main>

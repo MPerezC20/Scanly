@@ -149,14 +149,15 @@ function handleRegister(e) {
             return;
         }
         
-        // Crear nuevo usuario
+        // Crear nuevo usuario (por defecto user, si el email contiene "admin" será admin)
+        const isAdmin = email.toLowerCase().includes('admin');
         const newUser = {
             id: Date.now().toString(),
             fullName,
             email,
-            password, // En producción, esto debería estar encriptado
+            password,
             createdAt: new Date().toISOString(),
-            role: 'user'
+            role: isAdmin ? 'admin' : 'user'
         };
         
         users.push(newUser);
@@ -236,3 +237,9 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);
+
+// ========== CERRAR SESIÓN ==========
+function logout() {
+    localStorage.removeItem('currentUser');
+    window.location.href = 'index.html';
+}
